@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>夢幻國戰：小貝爾與千人軍團 — 玩家正式試玩版 (v1.0)</title>
+
+<!-- Facebook Open Graph 社群分享標準格式 (1200 x 630) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="夢幻國戰：小貝爾與千人軍團" />
+<meta property="og:description" content="指揮王級小貝爾、將軍焰朵與小翼龍，率領千人夢幻軍團展開即時國戰對決！" />
+<meta property="og:image" content="assets/fb_cover.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<style>
+  :root {
+    --bg-dark: #130f26;
+    --panel-bg: rgba(26, 20, 48, 0.94);
+    --border-glow: rgba(216, 180, 254, 0.35);
+    --text-main: #f8fafc;
+    --text-muted: #cbd5e1;
+  }
+  * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    background: radial-gradient(circle at top, #271b4d 0%, #110c21 100%);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    height: 54px;
+    background: rgba(15, 11, 30, 0.92);
+    border-bottom: 1px solid var(--border-glow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 30;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    background: linear-gradient(90deg, #f9a8d4, #d8b4fe, #fde047);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .badge-demo {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(244, 114, 182, 0.2);
+    border: 1px solid rgba(244, 114, 182, 0.5);
+    color: #fbcfe8;
+    -webkit-text-fill-color: #fbcfe8;
+  }
+  .top-actions { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    border: 1px solid var(--border-glow);
+    background: rgba(51, 38, 92, 0.75);
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); border-color: #f0abfc; background: rgba(88, 62, 150, 0.9); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary {
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    border: none;
+    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+  }
+  main { flex: 1; position: relative; overflow: hidden; }
+  .screen { position: absolute; inset: 0; display: none; overflow-y: auto; padding: 18px 24px; }
+  .screen.active { display: block; }
+
+  .lobby-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 24px; }
+  #lobby-screen {
+    background: linear-gradient(rgba(17, 12, 33, 0.76), #110c21 720px),
+      url("assets/夢幻國戰_FB封面_版權資訊版_1200x630.png") center top / cover no-repeat;
+  }
+  .lobby-cover {
+    display: block; align-self: center; width: min(100%, 780px); height: auto;
+    border-radius: 16px; border: 1px solid var(--border-glow);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  }
+  .mode-tabs {
+    display: flex; gap: 12px; background: rgba(15, 11, 30, 0.75);
+    padding: 8px; border-radius: 14px; border: 1px solid var(--border-glow); width: fit-content;
+  }
+  .mode-tab {
+    padding: 9px 20px; border-radius: 10px; font-weight: 700; cursor: pointer;
+    border: 1px solid transparent; color: var(--text-muted); background: transparent; font-size: 0.95rem;
+  }
+  .mode-tab.active {
+    background: linear-gradient(135deg, rgba(236,72,153,0.3), rgba(139,92,246,0.35));
+    border-color: #f472b6; color: #fff;
+  }
+  .lobby-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; }
+  @media (max-width: 960px) { .lobby-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel-bg); border: 1px solid var(--border-glow);
+    border-radius: 16px; padding: 16px 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+  .card-title { font-size: 1rem; font-weight: 700; color: #f5d0fe; margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .stage-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stage-item {
+    border: 1px solid rgba(216, 180, 254, 0.25); background: rgba(34, 25, 64, 0.65);
+    border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.16s;
+  }
+  .stage-item:hover:not(.locked) { border-color: #f472b6; transform: translateY(-2px); }
+  .stage-item.selected { border: 2px solid #fbbf24; background: rgba(88, 55, 130, 0.55); }
+  .stage-item.locked { opacity: 0.48; cursor: not-allowed; filter: grayscale(0.7); }
+  .stage-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.92rem; }
+  .stage-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+  .stage-tip { margin-top: 6px; font-size: 0.74rem; color: #fde68a; background: rgba(251, 191, 36, 0.12); padding: 4px 8px; border-radius: 6px; }
+
+  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .hero-card {
+    border: 1px solid rgba(216, 180, 254, 0.28); background: rgba(35, 26, 66, 0.75);
+    border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.16s;
+  }
+  .hero-card.selected { border: 2px solid #38bdf8; background: rgba(30, 64, 110, 0.65); box-shadow: 0 0 16px rgba(56, 189, 248, 0.35); }
+  .hero-avatar {
+    width: 68px; height: 68px; border-radius: 50%; margin: 0 auto 6px;
+    border: 2px solid rgba(255,255,255,0.4); overflow: hidden; background: #2e2152;
+    display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+  }
+  .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-avatar-sprite {
+    display: block; width: 100%; height: 100%;
+    background-size: 400% 400%; background-repeat: no-repeat;
+    animation: hero-idle 720ms steps(4, jump-none) infinite;
+  }
+  @keyframes hero-idle {
+    from { background-position: 0% 0%; }
+    to { background-position: 100% 0%; }
+  }
+  #lobby-screen:not(.active) .hero-avatar-sprite { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-avatar-sprite { animation: none; }
+  }
+  .hero-name { font-weight: 700; font-size: 0.92rem; }
+  .hero-role { font-size: 0.74rem; color: #f9a8d4; margin-bottom: 4px; }
+  .hero-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  label.field { display: flex; flex-direction: column; gap: 5px; font-size: 0.82rem; color: #e2e8f0; }
+  select, input[type="range"] {
+    background: rgba(18, 13, 38, 0.9); border: 1px solid var(--border-glow);
+    color: #fff; padding: 7px 10px; border-radius: 8px; font-size: 0.86rem;
+  }
+  .unit-preview-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 8px; }
+  .unit-mini {
+    background: rgba(20, 15, 42, 0.8); border: 1px solid rgba(216, 180, 254, 0.2);
+    border-radius: 8px; padding: 6px 4px; text-align: center; font-size: 0.72rem;
+  }
+  .unit-mini canvas { display: block; margin: 0 auto 3px; }
+
+  #battle-screen { padding: 0; overflow: hidden; }
+  #battle-canvas { display: block; width: 100%; height: 100%; }
+  .battle-hud-top {
+    position: absolute; top: 10px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    pointer-events: none; z-index: 15;
+  }
+  .hud-box {
+    pointer-events: auto; background: rgba(16, 12, 34, 0.86); border: 1px solid var(--border-glow);
+    backdrop-filter: blur(8px); border-radius: 12px; padding: 8px 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .army-meter { width: 320px; }
+  .meter-labels { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+  .meter-bar { height: 10px; background: #fb7185; border-radius: 999px; overflow: hidden; border: 1px solid rgba(255,255,255,0.25); }
+  .meter-fill-blue { height: 100%; background: linear-gradient(90deg, #0284c7, #38bdf8); width: 50%; transition: width 0.2s; }
+
+  .battle-hud-bottom {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; align-items: center; background: rgba(16, 12, 34, 0.9);
+    border: 1px solid var(--border-glow); padding: 10px 16px; border-radius: 16px; z-index: 15;
+  }
+  .skill-btn {
+    padding: 8px 14px; border-radius: 10px; border: 1px solid #f472b6;
+    background: linear-gradient(135deg, rgba(236,72,153,0.3), rgba(139,92,246,0.4));
+    color: #fff; font-weight: 700; font-size: 0.84rem; cursor: pointer; min-width: 155px; text-align: center;
+  }
+  .skill-btn:disabled { opacity: 0.45; border-color: #64748b; background: rgba(30,41,59,0.7); cursor: not-allowed; }
+
+  #cutin-banner {
+    position: absolute; top: 84px; right: -460px; width: 420px;
+    background: linear-gradient(90deg, rgba(30,20,60,0.95), rgba(190,24,93,0.92));
+    border: 2px solid #fde047; border-right: none; border-radius: 16px 0 0 16px;
+    padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+    transition: right 0.32s cubic-bezier(0.22, 1, 0.36, 1); z-index: 25; pointer-events: none;
+  }
+  #cutin-banner.show { right: 0; }
+  #cutin-banner img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid #fde047; object-fit: cover; }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(8, 6, 18, 0.78);
+    display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-box {
+    background: #1c1538; border: 1px solid #d8b4fe; border-radius: 18px;
+    max-width: 680px; width: 100%; padding: 22px; max-height: 85vh; overflow-y: auto;
+  }
+  .modal-box h2 { color: #f5d0fe; margin-bottom: 12px; font-size: 1.2rem; }
+  .rule-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.85rem; }
+  .rule-table th, .rule-table td { border: 1px solid rgba(216,180,254,0.25); padding: 8px; text-align: left; }
+  .rule-table th { background: rgba(88, 62, 150, 0.45); }
+  textarea.save-code {
+    width: 100%; height: 74px; background: #0f0b20; color: #a5f3fc;
+    border: 1px solid var(--border-glow); border-radius: 8px; padding: 8px; font-family: monospace; font-size: 0.78rem; margin: 8px 0;
+  }
+</style>
+</head>
+<body>
+<audio id="lobby-music" src="assets/夢幻國戰.wav" preload="metadata" loop></audio>
+<audio id="battle-music" src="assets/Charge%20of%20the%20Thousand.wav" preload="metadata" loop></audio>
+
+<header>
+  <div class="brand">
+    <span>✨ 夢幻國戰：小貝爾與千人軍團</span>
+    <span class="badge-demo">玩家試玩版 v1.0 (FB 1200×630 適配)</span>
+  </div>
+  <div class="top-actions">
+    <span id="asset-status" style="font-size:0.78rem;color:#a5f3fc;">素材載入中...</span>
+    <button class="btn" id="btn-rules">📖 遊戲規則說明</button>
+    <button class="btn" id="btn-save-mgr">💾 存檔管理</button>
+  </div>
+  <div style="text-align:center;font-size:0.78rem;color:#cbd5e1;opacity:0.85;margin-top:8px;">
+  © 2026 Belle AI 工坊 ｜ 創作工具：Gemini × ChatGPT ｜ v1.0 Demo (2026.11.19)
+  </div>
+</header>
+
+<main>
+  <section id="lobby-screen" class="screen active">
+    <div class="lobby-container">
+      <img class="lobby-cover" src="assets/夢幻國戰_FB封面_版權資訊版_1200x630.png"
+        width="1200" height="630" alt="夢幻國戰封面，小貝爾、焰朵與小翼龍立於星晶戰場">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="tab-campaign">🏆 戰役闖關模式 (6關)</button>
+          <button class="mode-tab" id="tab-skirmish">🔒 自由遭遇戰 (通關第6關解鎖)</button>
+        </div>
+        <div style="font-size:0.86rem;color:#fde68a;" id="progress-summary">戰役進度：第 1 / 6 關 ｜ 總星數：0 ⭐</div>
+        <button class="btn" id="btn-lobby-music" type="button">▶️ 播放首頁音樂</button>
+      </div>
+
+      <div class="lobby-grid">
+        <div class="card">
+          <div id="campaign-panel">
+            <div class="card-title"><span>🗺️ 選擇夢幻戰役關卡（過關解鎖下一關）</span></div>
+            <div class="stage-list" id="stage-list"></div>
+          </div>
+
+          <div id="skirmish-panel" style="display:none;">
+            <div class="card-title"><span>⚔️ 自由遭遇戰自訂規則</span></div>
+            <div class="form-row">
+              <label class="field">戰場地圖選擇
+                <select id="skirmish-map">
+                  <option value="cloud">☁️ 晨曦粉紫雲海浮空島（雙虹橋奪橋）</option>
+                  <option value="crystal">💎 星光水晶草原（中央星核與紫晶掩體）</option>
+                </select>
+              </label>
+              <label class="field">NPC 難度等級
+                <select id="skirmish-diff">
+                  <option value="random" selected>🎲 隨機難度</option>
+                  <option value="easy">🌱 簡單</option>
+                  <option value="normal">⚔️ 普通</option>
+                  <option value="hard">🔥 困難</option>
+                  <option value="nightmare">👑 夢魘</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label class="field">敵方指揮官選擇
+                <select id="skirmish-enemy-hero">
+                  <option value="belle">👑 王級・小貝爾</option>
+                  <option value="yanduo">⚔️ 將軍・焰朵</option>
+                  <option value="ptero">🌪️ 將軍・小翼龍</option>
+                </select>
+              </label>
+              <label class="field">出戰兵數：<span id="skirmish-count-lbl">1000</span> 人
+                <input type="range" id="skirmish-count" min="400" max="1000" step="100" value="1000" />
+              </label>
+            </div>
+            <label><input type="checkbox" id="skirmish-endurance" /> 無盡挑戰</label>
+            <label class="field">本場使用道具
+              <select id="skirmish-supply">
+                <option value="">不使用道具</option>
+              </select>
+            </label>
+            <p id="endurance-status" class="stage-sub" aria-live="polite" hidden></p>
+            <p id="skirmish-record" class="stage-sub"></p>
+            <details id="endurance-history" hidden>
+              <summary>過關兵數紀錄</summary>
+              <ol id="endurance-rounds" class="stage-sub"></ol>
+            </details>
+          </div>
+
+          <div style="margin-top:14px;border-top:1px solid rgba(216,180,254,0.2);padding-top:12px;">
+            <div class="card-title" style="margin-bottom:6px;"><span>🛡️ 六大夢幻兵種圖鑑預覽</span></div>
+            <div class="unit-preview-strip" id="unit-preview-strip"></div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;">
+          <div>
+            <div class="card-title"><span>👑 選擇我方出戰指揮官（限派 1 名）</span></div>
+            <div class="hero-grid" id="hero-grid"></div>
+
+            <div class="card-title" style="margin-top:14px;"><span>🚩 配置千人帶兵編制（70% 主力 ＋ 30% 副官）</span></div>
+            <div class="form-row">
+              <label class="field">前排主力兵種 (70%)
+                <select id="player-main-unit"></select>
+              </label>
+              <label class="field">後排副官兵種 (30%)
+                <select id="player-sub-unit"></select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label class="field">出戰幾何陣型
+                <select id="player-formation">
+                  <option value="line">🛡️ 雙排星輝方陣（均衡推進）</option>
+                  <option value="wedge">⚡ 突擊破陣楔形（中央突破）</option>
+                  <option value="arc">🌙 月牙包圍弧陣（兩翼夾擊）</option>
+                  <option value="spread">✨ 疏散抗砲散陣（防範圍法術）</option>
+                </select>
+              </label>
+              <div style="display:flex;align-items:flex-end;">
+                <div id="enemy-preview-box" style="font-size:0.8rem;color:#fbcfe8;background:rgba(244,114,182,0.12);border:1px solid rgba(244,114,182,0.3);padding:8px 10px;border-radius:8px;width:100%;">
+                  敵軍情報載入中...
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-start-battle" style="width:100%;justify-content:center;padding:13px;font-size:1.05rem;margin-top:10px;">
+            ⚔️ 開始國戰出擊！
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="battle-screen" class="screen">
+    <canvas id="battle-canvas"></canvas>
+
+    <div class="battle-hud-top">
+      <div class="hud-box">
+        <button class="btn" id="btn-retreat">🔙 退回選單</button>
+        <span id="battle-stage-tag" style="font-weight:700;color:#fde047;font-size:0.9rem;">第 1 關</span>
+      </div>
+
+      <div class="hud-box army-meter">
+        <div style="width:100%;">
+          <div class="meter-labels">
+            <span style="color:#38bdf8;">🟦 我方：<span id="hud-blue-cnt">1000</span></span>
+            <span id="hud-timer" style="color:#fde047;">00:00</span>
+            <span style="color:#fb7185;"><span id="hud-red-cnt">1000</span> ：敵方 🟥</span>
+          </div>
+          <div class="meter-bar"><div class="meter-fill-blue" id="hud-balance-bar"></div></div>
+        </div>
+      </div>
+
+      <div class="hud-box">
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="chk-auto-skill" /> AI自動放技
+        </label>
+        <button class="btn" id="btn-pause">⏸️ 暫停</button>
+      </div>
+    </div>
+
+    <div id="cutin-banner">
+      <img id="cutin-img" src="" alt="" />
+      <div>
+        <div id="cutin-title" style="font-weight:800;color:#fde047;font-size:1rem;">奧義發動！</div>
+        <div id="cutin-sub" style="font-size:0.8rem;color:#fff;">技能效果</div>
+      </div>
+    </div>
+
+    <div class="battle-hud-bottom">
+      <button class="skill-btn" id="btn-skill-1">[Q] 技能一</button>
+      <button class="skill-btn" id="btn-skill-2">[W] 技能二</button>
+      <span style="font-size:0.76rem;color:#cbd5e1;">滾輪縮放</span>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="modal-rules">
+  <div class="modal-box">
+    <h2>📖 《夢幻國戰》遊戲規則與相剋說明</h2>
+    <p style="font-size:0.88rem;color:#e2e8f0;line-height:1.55;">
+      本作為 <strong>1000 vs 1000 帶兵即時國戰</strong>。每場戰役可指派 <strong>1 名指揮官</strong>（王級小貝爾、將軍焰朵或將軍小翼龍）率領主力與副官軍團出戰。擊潰敵方全部軍團與指揮官即可獲勝並解鎖下一關！
+    </p>
+    <table class="rule-table">
+      <thead><tr><th>兵種名稱</th><th>定位</th><th>相剋優勢</th></tr></thead>
+      <tbody>
+        <tr><td>🛡️ 星晶盾衛</td><td>重裝前排步兵</td><td>高防禦減傷，穩固防線掩護後排</td></tr>
+        <tr><td>🔱 琉璃星槍兵</td><td>反騎長柄兵</td><td><strong>剋制天馬騎士 (1.8x 傷害)</strong></td></tr>
+        <tr><td>🏹 焰羽弓手</td><td>遠程精準射手</td><td><strong>剋制空中飛行單位與法師 (1.5x)</strong></td></tr>
+        <tr><td>🦄 天馬騎士</td><td>高速突擊騎兵</td><td><strong>剋制弓手與法師 (1.6x 傷害)</strong></td></tr>
+        <tr><td>🔮 夢幻星塵法師</td><td>範圍星爆法師</td><td><strong>剋制重裝盾衛與槍兵 (1.6x 範圍傷)</strong></td></tr>
+        <tr><td>🔔 金鈴醫師</td><td>戰場音律治療</td><td>持續為周圍低血量友軍恢復生命</td></tr>
+      </tbody>
+    </table>
+    <div style="text-align:right;margin-top:14px;">
+      <button class="btn btn-primary" onclick="closeModal('modal-rules')">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-save">
+  <div class="modal-box">
+    <h2>💾 遊戲進度存檔管理</h2>
+    <textarea class="save-code" id="save-code-box"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;">
+      <div style="display:flex;gap:8px;">
+        <button class="btn" id="btn-copy-save">📋 複製代碼</button>
+        <button class="btn" id="btn-import-save">📥 匯入代碼</button>
+        <button class="btn" id="btn-reset-save" style="border-color:#fb7185;color:#fecdd3;">🗑️ 重置進度</button>
+      </div>
+      <button class="btn btn-primary" onclick="closeModal('modal-save')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-result">
+  <div class="modal-box" style="text-align:center;">
+    <h2 id="result-title" style="font-size:1.5rem;">🎉 戰役勝利！</h2>
+    <div id="result-stars" style="font-size:2rem;margin:8px 0;">⭐⭐⭐</div>
+    <p id="result-win-record" hidden></p>
+    <p id="result-camp-count" hidden></p>
+    <p id="result-desc" style="font-size:0.92rem;color:#e2e8f0;margin-bottom:16px;"></p>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="btn" id="btn-result-lobby">🔙 返回出戰大廳</button>
+      <button class="btn btn-primary" id="btn-result-next">➡️ 挑戰下一關</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   1. 載入地圖及已去背的角色、兵種 PNG
+   ============================================================================ */
+const ASSET_CANDIDATES = {
+  map_cloud: [
+    'assets/map_cloud.jpg',
+    'assets/map_cloud.png',
+    'assets/watermarked_img_12828094582050889472.jpg'
+  ],
+  map_crystal: [
+    'assets/map_crystal.jpg',
+    'assets/map_crystal.png',
+    'assets/watermarked_img_7233191717781918217.jpg'
+  ],
+  hero_belle_icon: ['assets/transparent/hero_belle_icon.png'],
+  hero_belle_sheet: ['assets/transparent/hero_belle_sheet.png'],
+  hero_yanduo_icon: ['assets/transparent/hero_yanduo_icon.png'],
+  hero_yanduo_sheet: ['assets/transparent/hero_yanduo_sheet.png'],
+  hero_ptero_icon: ['assets/transparent/hero_ptero_icon.png'],
+  hero_ptero_sheet: ['assets/transparent/hero_ptero_sheet.png'],
+  unit_shield: ['assets/transparent/unit_shield.png'],
+  unit_pike: ['assets/transparent/unit_pike.png'],
+  unit_archer: ['assets/transparent/unit_archer.png'],
+  unit_cavalry: ['assets/transparent/unit_cavalry.png'],
+  unit_mage: ['assets/transparent/unit_mage.png'],
+  unit_medic: ['assets/transparent/unit_medic.png']
+};
+
+const LOADED_IMAGES = {};
+
+function loadWithFallback(key, list, idx = 0) {
+  if (idx >= list.length) {
+    updateAssetStatus();
+    return;
+  }
+  const img = new Image();
+  // 本機 file:// 圖片須以一般圖片模式載入，避免被 CORS 擋下。
+  img.onload = () => {
+    LOADED_IMAGES[key] = img;
+    updateAssetStatus();
+    renderLobbyUI();
+  };
+  img.onerror = () => loadWithFallback(key, list, idx + 1);
+  img.src = encodeURI(list[idx]);
+}
+
+function preloadAllAssets() {
+  Object.entries(ASSET_CANDIDATES).forEach(([key, paths]) => loadWithFallback(key, paths, 0));
+}
+
+function updateAssetStatus() {
+  const ok = Object.keys(LOADED_IMAGES).length;
+  const el = document.getElementById('asset-status');
+  if (el) el.textContent = ok === 14 ? '✨ 美術資源已全數就緒 (14/14)' : `🎨 視覺資源已載入 (${ok}/14)`;
+}
+
+/* ============================================================================
+   2. 遊戲資料與 FB 標準 1200x630 世界座標系統
+   ============================================================================ */
+const WORLD_W = 1200, WORLD_H = 630;
+const CAMP_LEFT_X = 170, CAMP_RIGHT_X = WORLD_W - CAMP_LEFT_X;
+const CAMP_REACH_MARGIN = 12, CAMP_SETTLEMENT_DELAY = 3;
+
+const HEROES = {
+  belle: {
+    id: 'belle', name: '小貝爾', title: '王級・星晶幼龍王',
+    iconKey: 'hero_belle_icon', sheetKey: 'hero_belle_sheet', color: '#f472b6',
+    hp: 3600, atk: 145, speed: 58, range: 120, flying: false,
+    desc: '額頭紫晶雙色吐息，擅長大範圍星爆與全軍金鈴聖域治療。',
+    s1: { name: '🔮 紫晶星辰爆裂', cd: 12, desc: '引爆敵陣中央造成巨額星光範圍傷害！' },
+    s2: { name: '🔔 金鈴夢幻聖域', cd: 15, desc: '搖響金鈴為全軍恢復大量生命並提升士氣！' }
+  },
+  yanduo: {
+    id: 'yanduo', name: '焰朵', title: '將軍・聖焰天馬駒',
+    iconKey: 'hero_yanduo_icon', sheetKey: 'hero_yanduo_sheet', color: '#fbbf24',
+    hp: 3200, atk: 165, speed: 82, range: 70, flying: false,
+    desc: '高速衝鋒突擊將領，金蹄聖焰可撕裂前排並召喚火羽箭雨。',
+    s1: { name: '🔥 金蹄聖焰破陣', cd: 11, desc: '向敵軍密集處高速衝鋒並擊飛周圍敵兵！' },
+    s2: { name: '🪶 火羽流光箭雨', cd: 14, desc: '振翅灑下大範圍金橘火羽灼燒敵方後排！' }
+  },
+  ptero: {
+    id: 'ptero', name: '小翼龍', title: '將軍・櫻風空戰翼龍',
+    iconKey: 'hero_ptero_icon', sheetKey: 'hero_ptero_sheet', color: '#fb7185',
+    hp: 2900, atk: 155, speed: 92, range: 105, flying: true,
+    desc: '空中飛行無視雲海與水晶阻擋，可高空俯衝切入敵軍後排。',
+    s1: { name: '🦅 銀翼高空俯衝', cd: 10, desc: '無視地形瞬襲敵方後排造成暴擊震盪！' },
+    s2: { name: '🌸 櫻風銀流旋風', cd: 14, desc: '捲起粉色風暴牽引並持續撕裂範圍內敵軍！' }
+  }
+};
+
+const UNITS = {
+  shield:  { id: 'shield',  name: '星晶盾衛', sheetKey: 'unit_shield',  color: '#38bdf8', hp: 220, atk: 24, speed: 38, range: 24, cd: 1.1 },
+  pike:    { id: 'pike',    name: '琉璃星槍兵', sheetKey: 'unit_pike',    color: '#c084fc', hp: 185, atk: 32, speed: 44, range: 36, cd: 1.0 },
+  archer:  { id: 'archer',  name: '焰羽弓手', sheetKey: 'unit_archer',  color: '#fb923c', hp: 130, atk: 34, speed: 42, range: 150, cd: 1.25 },
+  cavalry: { id: 'cavalry', name: '天馬騎士', sheetKey: 'unit_cavalry', color: '#fde047', hp: 210, atk: 42, speed: 70, range: 28, cd: 1.05 },
+  mage:    { id: 'mage',    name: '夢幻星塵法師', sheetKey: 'unit_mage',    color: '#e879f9', hp: 125, atk: 46, speed: 38, range: 140, cd: 1.5, aoe: 40 },
+  medic:   { id: 'medic',   name: '金鈴醫師', sheetKey: 'unit_medic',   color: '#34d399', hp: 140, atk: 26, speed: 40, range: 115, cd: 1.3, heal: true }
+};
+
+const SKIRMISH_DIFFICULTIES = {
+  easy: { label: '簡單', countRatio: 0.6, multiplier: 0.85 },
+  normal: { label: '普通', countRatio: 1, multiplier: 1 },
+  hard: { label: '困難', countRatio: 1, multiplier: 1.2 },
+  nightmare: { label: '夢魘', countRatio: 1.2, multiplier: 1.4 }
+};
+
+function randomChoice(options) {
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+function estimateTroopStrength(mainType, subType) {
+  const strength = ({ hp, atk, cd }) => Math.sqrt(hp * atk / cd);
+  return 0.7 * strength(UNITS[mainType]) + 0.3 * strength(UNITS[subType]);
+}
+
+const ENDURANCE_SUPPLIES = [
+  { id: 'reserves', name: '援軍號角（兵力補滿）' },
+  { id: 'blade', name: '焰鋒磨石（本場士兵攻擊 +50%）' },
+  { id: 'guard', name: '星晶護甲（本場士兵受到的傷害 −50%）' }
+];
+
+function chooseSkirmishDifficulty() {
+  const selection = document.getElementById('skirmish-diff').value;
+  return selection === 'random' ? randomChoice(Object.keys(SKIRMISH_DIFFICULTIES)) : selection;
+}
+
+function bestEnduranceWins() {
+  return Math.max(saveData.enduranceBest ?? 0, saveData.enduranceRun?.rounds.length ?? 0);
+}
+
+function getEnduranceRun() {
+  const run = saveData.enduranceRun;
+  if (run && !run.finished) return run;
+
+  saveData.enduranceBest = bestEnduranceWins();
+  const capacity = Number(document.getElementById('skirmish-count').value);
+  saveData.enduranceRun = {
+    difficulty: chooseSkirmishDifficulty(), capacity, troops: capacity, rounds: [],
+    finished: false
+  };
+  writeSave();
+  return saveData.enduranceRun;
+}
+
+function buildSkirmishConfig(run, supply, endurance) {
+  const difficulty = SKIRMISH_DIFFICULTIES[run?.difficulty ?? chooseSkirmishDifficulty()];
+  const playerCount = Number(document.getElementById('skirmish-count').value);
+  const available = availableEnduranceTroops(run, supply);
+  const deployed = Math.min(playerCount, available);
+  const types = Object.keys(UNITS);
+  const enemyMain = randomChoice(types);
+  const enemySub = randomChoice(types.filter((type) => type !== enemyMain));
+  const playerStrength = estimateTroopStrength(saveData.mainUnit, saveData.subUnit);
+  const enemyStrength = estimateTroopStrength(enemyMain, enemySub);
+  const adjustment = Math.max(0.92, Math.min(1.08, playerStrength / enemyStrength));
+  const completedRounds = endurance ? run.rounds.length : 0;
+
+  return {
+    mode: 'skirmish',
+    run,
+    enduranceRound: endurance ? completedRounds + 1 : null,
+    supply,
+    reserveTroops: available - deployed,
+    difficulty: difficulty.label,
+    map: document.getElementById('skirmish-map').value,
+    playerCount: deployed,
+    enemyHero: document.getElementById('skirmish-enemy-hero').value,
+    enemyCount: Math.max(1, Math.round((endurance ? run.capacity : deployed) * difficulty.countRatio)),
+    enemyMain,
+    enemySub,
+    enemyMult: difficulty.multiplier * (adjustment + 0.18 * completedRounds)
+  };
+}
+
+function availableEnduranceTroops(run, supply) {
+  return supply === 'reserves' ? run.capacity : run.troops;
+}
+
+function skirmishSupplies() {
+  const stock = saveData.skirmishSupplies ??= {};
+  const oldRun = saveData.enduranceRun;
+  if (oldRun?.supply) {
+    // Older saves already applied the troop reward and queued the other effects.
+    if (oldRun.supply !== 'reserves' && !oldRun.finished) {
+      stock[oldRun.supply] = (stock[oldRun.supply] ?? 0) + 1;
+    }
+    delete oldRun.supply;
+    writeSave();
+  }
+  return stock;
+}
+
+const LEGACY_STARTER_SUPPLIES_KEY = 'dream_war_demo_starter_supplies_v1';
+const STARTER_SUPPLIES_KEY = 'dream_war_demo_starter_supplies_by_save_v2';
+let starterSuppliesBySave = {};
+
+function starterSaveId() {
+  const id = saveData.starterSaveId;
+  return typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id) ? id : 'legacy';
+}
+
+function readStarterSupplies() {
+  const id = starterSaveId();
+  try {
+    const stored = localStorage.getItem(STARTER_SUPPLIES_KEY);
+    if (stored) starterSuppliesBySave = JSON.parse(stored);
+    if (id === 'legacy' && !starterSuppliesBySave.legacy) {
+      const legacy = localStorage.getItem(LEGACY_STARTER_SUPPLIES_KEY);
+      if (legacy) starterSuppliesBySave.legacy = JSON.parse(legacy);
+    }
+  } catch (error) {
+    // Keep the current session's inventory when browser storage is unavailable.
+  }
+  if (!starterSuppliesBySave[id]) {
+    storeStarterSupplies(Object.fromEntries(ENDURANCE_SUPPLIES.map(({ id }) => [id, 1])));
+  }
+  return starterSuppliesBySave[id];
+}
+
+function storeStarterSupplies(stock) {
+  starterSuppliesBySave[starterSaveId()] = stock;
+  try { localStorage.setItem(STARTER_SUPPLIES_KEY, JSON.stringify(starterSuppliesBySave)); } catch (error) {}
+}
+
+const STAGES = [
+  { id: 1, name: '第 1 關：雲橋初試', map: 'cloud', enemyHero: 'yanduo', enemyCount: 600, enemyMain: 'cavalry', enemySub: 'shield', enemyMult: 0.85, tip: '💡 推薦使用「琉璃星槍兵」守住雙虹橋，反制敵方天馬騎士衝鋒！' },
+  { id: 2, name: '第 2 關：星晶迷陣', map: 'crystal', enemyHero: 'belle', enemyCount: 750, enemyMain: 'shield', enemySub: 'pike', enemyMult: 0.95, tip: '💡 敵方前排極厚，建議配置「夢幻星塵法師」打範圍破甲！' },
+  { id: 3, name: '第 3 關：櫻風奇襲', map: 'cloud', enemyHero: 'ptero', enemyCount: 900, enemyMain: 'archer', enemySub: 'pike', enemyMult: 1.0, tip: '💡 小翼龍會飛越雲海偷襲後排，請帶上「焰羽弓手」奪取制空權！' },
+  { id: 4, name: '第 4 關：金焰流星', map: 'crystal', enemyHero: 'yanduo', enemyCount: 1000, enemyMain: 'cavalry', enemySub: 'mage', enemyMult: 1.12, tip: '💡 敵方騎法雙核爆發極高，建議採用「疏散抗砲散陣」應戰！' },
+  { id: 5, name: '第 5 關：鈴音聖域', map: 'crystal', enemyHero: 'belle', enemyCount: 1000, enemyMain: 'shield', enemySub: 'medic', enemyMult: 1.2, tip: '💡 小貝爾搭配大量金鈴醫師續航極強，抓準時機用大招集中秒殺！' },
+  { id: 6, name: '第 6 關：夢幻王座', map: 'cloud', enemyHero: 'belle', enemyCount: 1000, enemyMain: 'cavalry', enemySub: 'mage', enemyMult: 1.32, tip: '👑 終極千人國戰！靈活運用 [Q] / [W] 奧義，通關即可解鎖自由遭遇戰！' }
+];
+
+const SAVE_KEY = 'dream_war_demo_save_v1';
+function newSave(starterId = crypto.randomUUID()) {
+  return { starterSaveId: starterId, unlockedStage: 1, stars: {}, campaignCleared: false, selectedHero: 'belle', mainUnit: 'shield', subUnit: 'archer', formation: 'line' };
+}
+let saveData = newSave();
+function loadSave() {
+  try {
+    const stored = localStorage.getItem(SAVE_KEY);
+    if (stored) saveData = { ...newSave(null), ...JSON.parse(stored) };
+    else writeSave();
+  } catch (error) {}
+}
+function writeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); } catch (e) {} }
+
+let currentMode = 'campaign';
+let selectedStageId = 1;
+
+function renderLobbyUI() {
+  const totalStars = Object.values(saveData.stars).reduce((a, b) => a + b, 0);
+  document.getElementById('progress-summary').textContent = `戰役進度：第 ${saveData.unlockedStage} / 6 關 ｜ 總星數：${totalStars} ⭐`;
+  document.getElementById('tab-skirmish').textContent = saveData.campaignCleared ? '⚔️ 自由遭遇戰 (已解鎖)' : '🔒 自由遭遇戰 (通關第6關解鎖)';
+  renderEnduranceStatus();
+
+  const stageList = document.getElementById('stage-list');
+  stageList.innerHTML = '';
+  STAGES.forEach((st) => {
+    const locked = st.id > saveData.unlockedStage;
+    const starCount = saveData.stars[st.id] || 0;
+    const div = document.createElement('div');
+    div.className = `stage-item ${locked ? 'locked' : ''} ${selectedStageId === st.id ? 'selected' : ''}`;
+    div.innerHTML = `
+      <div class="stage-header">
+        <span>${locked ? '🔒' : '⚔️'} ${st.name}</span>
+        <span>${starCount > 0 ? '⭐'.repeat(starCount) : (locked ? '未解鎖' : '可挑戰')}</span>
+      </div>
+      <div class="stage-sub">地圖：${st.map === 'cloud' ? '☁️ 雲海浮空島' : '💎 星光水晶草原'} ｜ 敵將：${HEROES[st.enemyHero].name} (${st.enemyCount}人)</div>
+      <div class="stage-tip">${st.tip}</div>
+    `;
+    if (!locked) div.onclick = () => { selectedStageId = st.id; renderLobbyUI(); };
+    stageList.appendChild(div);
+  });
+
+  const heroGrid = document.getElementById('hero-grid');
+  heroGrid.innerHTML = '';
+  Object.values(HEROES).forEach((h) => {
+    const img = LOADED_IMAGES[h.iconKey];
+    const sheet = LOADED_IMAGES[h.sheetKey];
+    const avatarHtml = img ? `<img src="${img.src}" alt="${h.name}" />` : `<span>${h.id === 'belle' ? '🐉' : h.id === 'yanduo' ? '🦄' : '🦅'}</span>`;
+    const card = document.createElement('div');
+    card.className = `hero-card ${saveData.selectedHero === h.id ? 'selected' : ''}`;
+    card.innerHTML = `<div class="hero-avatar">${avatarHtml}</div><div class="hero-name">${h.name}</div><div class="hero-role">${h.title}</div><div class="hero-desc">${h.desc}</div>`;
+    if (sheet) {
+      const sprite = document.createElement('span');
+      sprite.className = 'hero-avatar-sprite';
+      sprite.style.backgroundImage = `url("${sheet.src}")`;
+      sprite.setAttribute('role', 'img');
+      sprite.setAttribute('aria-label', h.name);
+      card.querySelector('.hero-avatar').replaceChildren(sprite);
+    }
+    card.onclick = () => { saveData.selectedHero = h.id; writeSave(); renderLobbyUI(); };
+    heroGrid.appendChild(card);
+  });
+
+  const strip = document.getElementById('unit-preview-strip');
+  strip.innerHTML = '';
+  Object.values(UNITS).forEach((u) => {
+    const box = document.createElement('div');
+    box.className = 'unit-mini';
+    const cv = document.createElement('canvas');
+    cv.width = 44; cv.height = 44;
+    const cctx = cv.getContext('2d');
+    const sheet = LOADED_IMAGES[u.sheetKey];
+    if (sheet) cctx.drawImage(sheet, 0, 0, sheet.width / 4, sheet.height / 2, 2, 2, 40, 40);
+    else { cctx.fillStyle = u.color; cctx.beginPath(); cctx.arc(22, 22, 14, 0, Math.PI * 2); cctx.fill(); }
+    box.appendChild(cv);
+    const lbl = document.createElement('div'); lbl.textContent = u.name; box.appendChild(lbl);
+    strip.appendChild(box);
+  });
+
+  const preview = document.getElementById('enemy-preview-box');
+  if (currentMode === 'campaign') {
+    const st = STAGES.find((s) => s.id === selectedStageId) || STAGES[0];
+    preview.innerHTML = `<strong>敵軍情報：</strong>${HEROES[st.enemyHero].name} 率領 ${st.enemyCount} 人（${UNITS[st.enemyMain].name} ＋ ${UNITS[st.enemySub].name}）`;
+  } else {
+    const eh = document.getElementById('skirmish-enemy-hero').value;
+    const run = saveData.enduranceRun;
+    const continuing = document.getElementById('skirmish-endurance').checked && run && !run.finished;
+    const diff = continuing ? run.difficulty : document.getElementById('skirmish-diff').value;
+    const label = diff === 'random' ? '隨機' : SKIRMISH_DIFFICULTIES[diff].label;
+    preview.innerHTML = `<strong>自由遭遇戰：</strong>敵將 ${HEROES[eh].name} ｜ 難度：${label} ｜ NPC 兵種於開戰時抽選，戰力依我方出兵微調。`;
+  }
+}
+
+function renderEnduranceStatus() {
+  const enabled = document.getElementById('skirmish-endurance').checked;
+  const run = enabled ? saveData.enduranceRun : saveData.skirmishRun;
+  const continuing = run && !run.finished;
+  const status = document.getElementById('endurance-status');
+  const best = enabled ? bestEnduranceWins() : (saveData.skirmishBest ?? 0);
+  const unit = enabled ? '波' : '場';
+  const lastDefeat = enabled
+    ? (saveData.enduranceLastDefeat ?? (run?.finished ? { wins: run.rounds.length } : null))
+    : saveData.skirmishLastDefeat;
+  const latest = lastDefeat ? ` ｜ 上次敗北前連勝：${lastDefeat.wins} ${unit}` : '';
+  document.getElementById('skirmish-record').textContent = `歷史最高連勝：${best} ${unit}${latest}`;
+  status.hidden = false;
+  const history = document.getElementById('endurance-history');
+  const rounds = document.getElementById('endurance-rounds');
+  history.hidden = !run?.rounds.length;
+  rounds.replaceChildren();
+  if (!history.hidden) {
+    for (const round of run.rounds) {
+      const entry = document.createElement('li');
+      const supply = ENDURANCE_SUPPLIES.find(({ id }) => id === round.supply);
+      const reserves = round.reserves === undefined ? '' : `，留守 ${round.reserves} 人`;
+      entry.textContent = `出戰存活 ${round.survivors} 人${reserves}，補充 ${round.recovered + (round.reinforcements ?? 0)} 人，抽到${supply.name}，下場可出戰 ${round.troops} 人。`;
+      rounds.appendChild(entry);
+    }
+  }
+  document.getElementById('skirmish-diff').disabled = Boolean(enabled && continuing);
+  renderSkirmishPreparation(continuing ? run : null);
+  if (continuing) {
+    const lastRound = run.rounds.at(-1);
+    const previous = lastRound ? `上次過關出戰存活 ${lastRound.survivors} 人 ｜ ` : '';
+    const round = enabled ? `待挑戰第 ${run.rounds.length + 1} 波 ｜ ` : '';
+    status.textContent = `${previous}${round}現有兵力 ${run.troops} / ${run.capacity} 人`;
+  } else {
+    const previous = run ? `上次通過 ${run.rounds.length} 波。 ` : '';
+    status.textContent = enabled
+      ? `${previous}每波過關補充初始兵力的 10%，抽取一項補給，下一波敵軍更強。`
+      : '初始兵力 1000 人。過關後，存活與留守兵力帶入下一場，並補充最多 100 人。';
+  }
+}
+
+function renderSkirmishPreparation(run) {
+  const supplySelect = document.getElementById('skirmish-supply');
+  const selection = supplySelect.value;
+  const stock = skirmishSupplies();
+  const starters = readStarterSupplies();
+  supplySelect.replaceChildren(new Option('不使用道具', ''));
+  for (const supply of ENDURANCE_SUPPLIES) {
+    const count = (stock[supply.id] ?? 0) + (starters[supply.id] ?? 0);
+    if (count > 0) {
+      supplySelect.add(new Option(`${supply.name} × ${count}`, supply.id));
+    }
+  }
+  supplySelect.value = Array.from(supplySelect.options).some((option) => option.value === selection) ? selection : '';
+
+  const count = document.getElementById('skirmish-count');
+  const max = run ? availableEnduranceTroops(run, supplySelect.value) : 1000;
+  const previousCount = Number(count.value);
+  const wasAtMax = previousCount === Number(count.max);
+  count.min = run ? '1' : '400';
+  count.step = run ? '1' : '100';
+  count.max = String(max);
+  count.value = wasAtMax ? String(max) : String(previousCount);
+  document.getElementById('skirmish-count-lbl').textContent = run
+    ? `${count.value} / ${max}` : count.value;
+}
+
+function populateUnitSelects() {
+  const mainSel = document.getElementById('player-main-unit');
+  const subSel = document.getElementById('player-sub-unit');
+  mainSel.innerHTML = ''; subSel.innerHTML = '';
+  Object.values(UNITS).forEach((u) => { mainSel.add(new Option(u.name, u.id)); subSel.add(new Option(u.name, u.id)); });
+  mainSel.value = saveData.mainUnit; subSel.value = saveData.subUnit;
+  document.getElementById('player-formation').value = saveData.formation;
+  mainSel.onchange = () => { saveData.mainUnit = mainSel.value; writeSave(); };
+  subSel.onchange = () => { saveData.subUnit = subSel.value; writeSave(); };
+  document.getElementById('player-formation').onchange = (e) => { saveData.formation = e.target.value; writeSave(); };
+}
+
+/* ============================================================================
+   3. 1200x630 戰場邏輯與空間雜湊引擎
+   ============================================================================ */
+const canvas = document.getElementById('battle-canvas');
+const ctx = canvas.getContext('2d');
+const battleMusic = document.getElementById('battle-music');
+battleMusic.volume = 0.35;
+const lobbyMusic = document.getElementById('lobby-music');
+const lobbyMusicButton = document.getElementById('btn-lobby-music');
+lobbyMusic.volume = 0.35;
+let lobbyMusicEnabled = true;
+
+function playLobbyMusic() {
+  lobbyMusic.play().catch((error) => {
+    if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+      console.warn('首頁背景音樂播放失敗', error);
+    }
+  });
+}
+
+function updateLobbyMusicButton() {
+  lobbyMusicButton.textContent = lobbyMusic.paused ? '▶️ 播放首頁音樂' : '⏸️ 暫停首頁音樂';
+}
+
+lobbyMusic.addEventListener('play', updateLobbyMusicButton);
+lobbyMusic.addEventListener('pause', updateLobbyMusicButton);
+lobbyMusicButton.onclick = () => {
+  lobbyMusicEnabled = lobbyMusic.paused;
+  if (lobbyMusicEnabled) playLobbyMusic();
+  else lobbyMusic.pause();
+};
+
+function playBattleMusic() {
+  battleMusic.play().catch((error) => {
+    if (error.name !== 'AbortError') console.warn('關卡背景音樂播放失敗', error);
+  });
+}
+
+function stopBattleMusic() {
+  battleMusic.pause();
+  battleMusic.currentTime = 0;
+}
+
+let battleActive = false, battlePaused = false, battleTime = 0, battleConfig = null;
+let campReachedAt = null;
+let units = [], projectiles = [], effects = [];
+const camera = { x: 0, y: 0, zoom: 1 };
+
+const CRYSTAL_PILLARS = [
+  { x: 600, y: 160, r: 34 },
+  { x: 360, y: 250, r: 34 },
+  { x: 840, y: 250, r: 34 },
+  { x: 390, y: 420, r: 34 },
+  { x: 810, y: 420, r: 34 }
+];
+
+function getCounterMult(atk, def) {
+  if (atk === 'pike' && def === 'cavalry') return 1.8;
+  if (atk === 'cavalry' && (def === 'archer' || def === 'mage')) return 1.6;
+  if (atk === 'mage' && (def === 'shield' || def === 'pike')) return 1.6;
+  if (atk === 'archer' && def === 'hero_ptero') return 1.5;
+  return 1.0;
+}
+
+function spawnArmy(team, heroId, count, mainType, subType, formation, mult) {
+  const isBlue = team === 'blue';
+  const baseX = isBlue ? 200 : WORLD_W - 200;
+  const dir = isBlue ? 1 : -1;
+  const h = HEROES[heroId];
+
+  units.push({
+    id: Math.random(), team, isHero: true, heroId, type: 'hero_' + heroId, sheetKey: h.sheetKey,
+    x: isBlue ? 120 : WORLD_W - 120, y: WORLD_H / 2, hp: h.hp * mult, maxHp: h.hp * mult,
+    atk: h.atk * mult, speed: h.speed, range: h.range, flying: h.flying, cd: 1.0, timer: 0,
+    state: 'idle', animTime: Math.random() * 4, facing: dir, skillTimer: 0, s1Cd: 3, s2Cd: 5
+  });
+
+  const mainCount = Math.floor(count * 0.7);
+  for (let i = 0; i < count; i++) {
+    const uType = i < mainCount ? mainType : subType;
+    const spec = UNITS[uType];
+    const isFront = i < mainCount;
+    const row = i % 26;
+    const col = Math.floor(i / 26);
+
+    let ox = baseX + dir * (isFront ? 38 - col * 8.5 : -30 - col * 8.5);
+    let oy = 85 + (row / 25) * (WORLD_H - 170);
+
+    if (formation === 'wedge') ox += dir * (80 - Math.abs(oy - WORLD_H / 2) * 0.35);
+    else if (formation === 'arc') ox += dir * (Math.abs(oy - WORLD_H / 2) * 0.35);
+    else if (formation === 'spread') { ox += (Math.random() - 0.5) * 70; oy += (Math.random() - 0.5) * 35; }
+
+    units.push({
+      id: Math.random(), team, isHero: false, type: uType, sheetKey: spec.sheetKey, color: spec.color,
+      x: Math.max(45, Math.min(WORLD_W - 45, ox)), y: Math.max(50, Math.min(WORLD_H - 50, oy)),
+      hp: spec.hp * mult, maxHp: spec.hp * mult, atk: spec.atk * mult,
+      speed: spec.speed * (0.94 + Math.random() * 0.12), range: spec.range, cd: spec.cd,
+      aoe: spec.aoe || 0, heal: spec.heal || false, timer: Math.random() * spec.cd,
+      state: 'idle', animTime: Math.random() * 4, facing: dir
+    });
+  }
+}
+
+function startBattle() {
+  if (currentMode === 'skirmish' && !saveData.campaignCleared) return;
+  saveData.mainUnit = document.getElementById('player-main-unit').value;
+  saveData.subUnit = document.getElementById('player-sub-unit').value;
+  saveData.formation = document.getElementById('player-formation').value;
+  writeSave();
+
+  if (currentMode === 'campaign') {
+    const st = STAGES.find((s) => s.id === selectedStageId) || STAGES[0];
+    battleConfig = { mode: 'campaign', stage: st, map: st.map, playerCount: 1000, enemyHero: st.enemyHero, enemyCount: st.enemyCount, enemyMain: st.enemyMain, enemySub: st.enemySub, enemyMult: st.enemyMult };
+    document.getElementById('battle-stage-tag').textContent = st.name;
+  } else {
+    const endurance = document.getElementById('skirmish-endurance').checked;
+    const run = endurance ? getEnduranceRun() : (saveData.skirmishRun ??= { capacity: 1000, troops: 1000, rounds: [] });
+    const select = document.getElementById('skirmish-supply');
+    const stock = skirmishSupplies();
+    const starters = readStarterSupplies();
+    const selection = select.value;
+    const supply = (stock[selection] ?? 0) + (starters[selection] ?? 0) > 0 ? selection : null;
+    if (supply === 'reserves' && run.troops === run.capacity) {
+      alert('目前兵力已達上限，請改選其他道具或選擇不使用。');
+      return;
+    }
+    battleConfig = buildSkirmishConfig(run, supply, endurance);
+    if (supply) {
+      if (starters[supply] > 0) {
+        starters[supply]--;
+        storeStarterSupplies(starters);
+      } else stock[supply]--;
+      select.value = '';
+      if (supply === 'reserves') run.troops = run.capacity;
+      writeSave();
+    }
+    const { difficulty, enemyMain, enemySub, enduranceRound } = battleConfig;
+    const roundLabel = enduranceRound ? `無盡第 ${enduranceRound} 波・` : '';
+    document.getElementById('battle-stage-tag').textContent =
+      `⚔️ ${roundLabel}${difficulty} ｜ ${UNITS[enemyMain].name} ＋ ${UNITS[enemySub].name}`;
+  }
+
+  units = []; projectiles = []; effects = [];
+  battleTime = 0; battlePaused = false; battleActive = true;
+  campReachedAt = null;
+  spawnArmy('blue', saveData.selectedHero, battleConfig.playerCount, saveData.mainUnit, saveData.subUnit, saveData.formation, 1.0);
+  if (battleConfig.supply === 'guard' || battleConfig.supply === 'blade') {
+    for (const unit of units) {
+      if (unit.isHero) continue;
+      if (battleConfig.supply === 'guard') unit.damageTakenMultiplier = 0.5;
+      else unit.atk *= 1.5;
+    }
+  }
+  spawnArmy('red', battleConfig.enemyHero, battleConfig.enemyCount, battleConfig.enemyMain, battleConfig.enemySub, 'line', battleConfig.enemyMult);
+
+  const ph = HEROES[saveData.selectedHero];
+  document.getElementById('btn-skill-1').textContent = `[Q] ${ph.s1.name}`;
+  document.getElementById('btn-skill-2').textContent = `[W] ${ph.s2.name}`;
+  switchScreen('battle-screen');
+  resizeCanvas(); fitCamera();
+  document.getElementById('btn-pause').textContent = '⏸️ 暫停';
+  battleMusic.currentTime = 0;
+  playBattleMusic();
+}
+
+function applyDamage(unit, amount) {
+  unit.hp -= amount * (unit.damageTakenMultiplier ?? 1);
+}
+
+function triggerHeroSkill(team, slot) {
+  const hero = units.find((u) => u.team === team && u.isHero && u.hp > 0);
+  if (!hero || (slot === 1 && hero.s1Cd > 0) || (slot === 2 && hero.s2Cd > 0)) return;
+  const spec = HEROES[hero.heroId];
+  hero.state = 'skill'; hero.skillTimer = 1.1;
+  if (slot === 1) hero.s1Cd = spec.s1.cd; else hero.s2Cd = spec.s2.cd;
+
+  const banner = document.getElementById('cutin-banner');
+  const icon = LOADED_IMAGES[spec.iconKey];
+  document.getElementById('cutin-img').src = icon ? icon.src : '';
+  document.getElementById('cutin-title').textContent = `${team === 'blue' ? '🟦 我方' : '🟥 敵方'} ${spec.name}・${slot === 1 ? spec.s1.name : spec.s2.name}`;
+  document.getElementById('cutin-sub').textContent = slot === 1 ? spec.s1.desc : spec.s2.desc;
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 2300);
+
+  let tx = team === 'blue' ? WORLD_W * 0.65 : WORLD_W * 0.35, ty = WORLD_H * 0.5;
+  const enemies = units.filter((u) => u.team !== team && u.hp > 0);
+  if (enemies.length > 0) { const s = enemies[Math.floor(Math.random() * enemies.length)]; tx = s.x; ty = s.y; }
+
+  if (slot === 1) {
+    if (hero.heroId === 'yanduo' || hero.heroId === 'ptero') { hero.x = tx; hero.y = ty; }
+    effects.push({ x: tx, y: ty, r: 8, maxR: 165, color: spec.color, life: 0.65 });
+    enemies.forEach((e) => { if (Math.hypot(e.x - tx, e.y - ty) < 165) applyDamage(e, e.isHero ? 380 : 185); });
+  } else if (hero.heroId === 'belle') {
+    effects.push({ x: hero.x, y: hero.y, r: 16, maxR: 380, color: '#34d399', life: 0.85 });
+    units.forEach((a) => { if (a.team === team && a.hp > 0) a.hp = Math.min(a.maxHp, a.hp + a.maxHp * 0.35); });
+  } else {
+    effects.push({ x: tx, y: ty, r: 12, maxR: 195, color: '#fbbf24', life: 0.9 });
+    enemies.forEach((e) => { if (Math.hypot(e.x - tx, e.y - ty) < 195) applyDamage(e, e.isHero ? 320 : 155); });
+  }
+}
+
+const CELL_SIZE = 56;
+let spatialGrid = new Map();
+function buildSpatialGrid() {
+  spatialGrid.clear();
+  for (let i = 0; i < units.length; i++) {
+    const u = units[i];
+    if (u.hp <= 0) continue;
+    const key = ((u.x / CELL_SIZE) | 0) + ',' + ((u.y / CELL_SIZE) | 0);
+    let b = spatialGrid.get(key);
+    if (!b) { b = []; spatialGrid.set(key, b); }
+    b.push(u);
+  }
+}
+
+function updateBattle(dt) {
+  if (!battleActive || battlePaused) return;
+  battleTime += dt;
+  buildSpatialGrid();
+
+  for (let i = 0; i < units.length; i++) {
+    const u = units[i];
+    if (u.hp <= 0) continue;
+
+    u.animTime += dt;
+    if (u.timer > 0) u.timer -= dt;
+    if (u.isHero) {
+      if (u.s1Cd > 0) u.s1Cd = Math.max(0, u.s1Cd - dt);
+      if (u.s2Cd > 0) u.s2Cd = Math.max(0, u.s2Cd - dt);
+      if (u.skillTimer > 0) u.skillTimer -= dt;
+    }
+
+    let target = null, bestDist = Infinity;
+    const gx = (u.x / CELL_SIZE) | 0, gy = (u.y / CELL_SIZE) | 0;
+    const rad = u.range > 100 ? 3 : 2;
+    for (let dx = -rad; dx <= rad; dx++) {
+      for (let dy = -rad; dy <= rad; dy++) {
+        const b = spatialGrid.get((gx + dx) + ',' + (gy + dy));
+        if (!b) continue;
+        for (let j = 0; j < b.length; j++) {
+          const o = b[j];
+          if (o === u || o.hp <= 0) continue;
+          const dist = Math.hypot(o.x - u.x, o.y - u.y);
+          if (o.team === u.team && dist < 13 && dist > 0.01) {
+            u.x -= ((o.x - u.x) / dist) * 14 * dt;
+            u.y -= ((o.y - u.y) / dist) * 14 * dt;
+          }
+          if (u.heal) {
+            if (o.team === u.team && o.hp < o.maxHp * 0.9 && dist < bestDist) { bestDist = dist; target = o; }
+          } else if (o.team !== u.team && dist < bestDist) { bestDist = dist; target = o; }
+        }
+      }
+    }
+
+    if (!target) {
+      const destX = u.team === 'blue' ? CAMP_RIGHT_X : CAMP_LEFT_X;
+      let destY = u.y;
+      if (battleConfig.map === 'cloud' && !u.flying && Math.abs(u.x - WORLD_W / 2) < 170) {
+        destY = u.y < WORLD_H / 2 ? 205 : 425;
+      }
+      const dx = destX - u.x, dy = destY - u.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > 0) {
+        const fraction = Math.min(1, u.speed * dt / distance);
+        u.x += dx * fraction;
+        u.y += dy * fraction;
+        if (dx !== 0) u.facing = Math.sign(dx);
+      }
+      if (!u.isHero || u.skillTimer <= 0) u.state = distance > 0 ? 'move' : 'idle';
+    } else {
+      u.facing = target.x >= u.x ? 1 : -1;
+      if (bestDist <= u.range) {
+        if (!u.isHero || u.skillTimer <= 0) u.state = 'attack';
+        if (u.timer <= 0) {
+          u.timer = u.cd;
+          if (u.heal) {
+            target.hp = Math.min(target.maxHp, target.hp + u.atk);
+            effects.push({ x: target.x, y: target.y, r: 3, maxR: 18, color: '#34d399', life: 0.3 });
+          } else if (u.range > 55) {
+            projectiles.push({ x: u.x, y: u.y, tx: target.x, ty: target.y, target, team: u.team, dmg: u.atk * getCounterMult(u.type, target.type), aoe: u.aoe || 0, color: u.isHero ? HEROES[u.heroId].color : u.color, speed: 380 });
+          } else {
+            applyDamage(target, u.atk * getCounterMult(u.type, target.type));
+          }
+        }
+      } else {
+        const ang = Math.atan2(target.y - u.y, target.x - u.x);
+        u.x += Math.cos(ang) * u.speed * dt; u.y += Math.sin(ang) * u.speed * dt;
+        if (!u.isHero || u.skillTimer <= 0) u.state = 'move';
+      }
+    }
+
+    if (battleConfig.map === 'crystal' && !u.flying) {
+      for (let p = 0; p < CRYSTAL_PILLARS.length; p++) {
+        const pil = CRYSTAL_PILLARS[p];
+        const d = Math.hypot(u.x - pil.x, u.y - pil.y);
+        if (d < pil.r) {
+          const pa = Math.atan2(u.y - pil.y, u.x - pil.x);
+          u.x = pil.x + Math.cos(pa) * pil.r; u.y = pil.y + Math.sin(pa) * pil.r;
+        }
+      }
+    }
+    u.x = Math.max(30, Math.min(WORLD_W - 30, u.x));
+    u.y = Math.max(36, Math.min(WORLD_H - 36, u.y));
+  }
+
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const pr = projectiles[i];
+    const dx = pr.tx - pr.x, dy = pr.ty - pr.y, dist = Math.hypot(dx, dy);
+    let blocked = false;
+    if (battleConfig.map === 'crystal') {
+      for (let p = 0; p < CRYSTAL_PILLARS.length; p++) {
+        if (Math.hypot(pr.x - CRYSTAL_PILLARS[p].x, pr.y - CRYSTAL_PILLARS[p].y) < CRYSTAL_PILLARS[p].r - 4) { blocked = true; break; }
+      }
+    }
+    if (blocked) { projectiles.splice(i, 1); continue; }
+    if (dist < pr.speed * dt + 8) {
+      if (pr.aoe > 0) {
+        effects.push({ x: pr.tx, y: pr.ty, r: 5, maxR: pr.aoe, color: pr.color, life: 0.35 });
+        units.forEach((e) => { if (e.team !== pr.team && e.hp > 0 && Math.hypot(e.x - pr.tx, e.y - pr.ty) <= pr.aoe) applyDamage(e, pr.dmg * 0.75); });
+      } else if (pr.target && pr.target.hp > 0) applyDamage(pr.target, pr.dmg);
+      projectiles.splice(i, 1);
+    } else { pr.x += (dx / dist) * pr.speed * dt; pr.y += (dy / dist) * pr.speed * dt; }
+  }
+
+  for (let i = effects.length - 1; i >= 0; i--) {
+    effects[i].life -= dt;
+    effects[i].r += (effects[i].maxR - effects[i].r) * 8 * dt;
+    if (effects[i].life <= 0) effects.splice(i, 1);
+  }
+
+  let blueAlive = 0, redAlive = 0, blueHero = null, redHero = null;
+  let reachedCamp = false;
+  for (const unit of units) {
+    if (unit.hp <= 0) continue;
+    if (unit.team === 'blue') {
+      if (unit.isHero) blueHero = unit;
+      else {
+        blueAlive++;
+        reachedCamp ||= unit.x >= CAMP_RIGHT_X - CAMP_REACH_MARGIN;
+      }
+    } else if (unit.isHero) {
+      redHero = unit;
+    } else {
+      redAlive++;
+      reachedCamp ||= unit.x <= CAMP_LEFT_X + CAMP_REACH_MARGIN;
+    }
+  }
+
+  document.getElementById('hud-blue-cnt').textContent = blueAlive;
+  document.getElementById('hud-red-cnt').textContent = redAlive;
+  document.getElementById('hud-balance-bar').style.width = ((blueAlive / Math.max(1, blueAlive + redAlive)) * 100).toFixed(1) + '%';
+  document.getElementById('hud-timer').textContent = `${String(Math.floor(battleTime / 60)).padStart(2, '0')}:${String(Math.floor(battleTime % 60)).padStart(2, '0')}`;
+
+  const b1 = document.getElementById('btn-skill-1'), b2 = document.getElementById('btn-skill-2');
+  if (blueHero) {
+    const ph = HEROES[blueHero.heroId];
+    b1.disabled = blueHero.s1Cd > 0; b2.disabled = blueHero.s2Cd > 0;
+    b1.textContent = blueHero.s1Cd > 0 ? `[Q] ${ph.s1.name} (${blueHero.s1Cd.toFixed(1)}s)` : `[Q] ${ph.s1.name}`;
+    b2.textContent = blueHero.s2Cd > 0 ? `[W] ${ph.s2.name} (${blueHero.s2Cd.toFixed(1)}s)` : `[W] ${ph.s2.name}`;
+  } else { b1.disabled = true; b2.disabled = true; }
+
+  const blueWipedOut = blueAlive === 0 && !blueHero;
+  const redWipedOut = redAlive === 0 && !redHero;
+  if (blueWipedOut || redWipedOut) {
+    finishBattle(blueWipedOut === redWipedOut ? null : redWipedOut, blueAlive, Boolean(blueHero));
+    return;
+  }
+
+  if (reachedCamp && campReachedAt === null) campReachedAt = battleTime;
+  if (campReachedAt !== null && battleTime - campReachedAt >= CAMP_SETTLEMENT_DELAY) {
+    const outcome = blueAlive === redAlive ? null : blueAlive > redAlive;
+    finishBattle(outcome, blueAlive, Boolean(blueHero), { blueAlive, redAlive });
+    return;
+  }
+
+  if (redHero) {
+    if (redHero.s2Cd <= 0 && redAlive < battleConfig.enemyCount * 0.65) triggerHeroSkill('red', 2);
+    else if (redHero.s1Cd <= 0 && battleTime > 4) triggerHeroSkill('red', 1);
+  }
+  if (blueHero && document.getElementById('chk-auto-skill').checked) {
+    if (blueHero.s2Cd <= 0 && blueAlive < battleConfig.playerCount * 0.65) triggerHeroSkill('blue', 2);
+    else if (blueHero.s1Cd <= 0 && battleTime > 4) triggerHeroSkill('blue', 1);
+  }
+}
+
+function finishBattle(victory, surviveCount, heroAlive, campCounts = null) {
+  if (!battleActive) return;
+  battleActive = false;
+  stopBattleMusic();
+  const modal = document.getElementById('modal-result'), nextBtn = document.getElementById('btn-result-next');
+  document.getElementById('result-win-record').hidden = true;
+  const campRecord = document.getElementById('result-camp-count');
+  campRecord.hidden = !campCounts;
+  if (campCounts) campRecord.textContent = `敵營抵達結算｜我方存活 ${campCounts.blueAlive} 人・敵方存活 ${campCounts.redAlive} 人`;
+  nextBtn.textContent = '➡️ 挑戰下一關';
+  if (victory === null) {
+    document.getElementById('result-title').textContent = '⚖️ 平手';
+    document.getElementById('result-stars').textContent = '';
+    document.getElementById('result-desc').textContent = '雙方存活兵數相同，可返回大廳再次挑戰。';
+    nextBtn.style.display = 'none';
+    if (battleConfig.mode === 'skirmish') {
+      const run = battleConfig.run;
+      const remaining = surviveCount + battleConfig.reserveTroops;
+      if (remaining > 0) run.troops = remaining;
+      else if (battleConfig.enduranceRound) run.finished = true;
+      else run.troops = run.capacity;
+      writeSave();
+    }
+    modal.classList.add('open');
+    return;
+  }
+  if (battleConfig.mode === 'skirmish') {
+    finishSkirmish(victory, nextBtn);
+    modal.classList.add('open');
+    return;
+  }
+  if (victory) {
+    let stars = 1 + (surviveCount >= battleConfig.playerCount * 0.35 ? 1 : 0) + (heroAlive && battleTime <= 75 ? 1 : 0);
+    document.getElementById('result-title').textContent = '🎉 夢幻國戰大獲全勝！';
+    document.getElementById('result-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    document.getElementById('result-desc').textContent = `通關耗時 ${Math.floor(battleTime)} 秒，剩餘精銳 ${surviveCount} 人！進度已自動存檔。`;
+    const sid = battleConfig.stage.id;
+    saveData.stars[sid] = Math.max(saveData.stars[sid] || 0, stars);
+    if (sid < 6) { saveData.unlockedStage = Math.max(saveData.unlockedStage, sid + 1); nextBtn.style.display = 'inline-flex'; }
+    else {
+      saveData.campaignCleared = true;
+      readStarterSupplies();
+      nextBtn.style.display = 'none';
+    }
+    writeSave();
+  } else {
+    document.getElementById('result-title').textContent = '💫 軍團暫時撤退';
+    document.getElementById('result-stars').textContent = '☆☆☆';
+    document.getElementById('result-desc').textContent = '敵軍攻勢猛烈，可返回大廳調整兵種相剋與陣型後再次挑戰！';
+    nextBtn.style.display = 'none';
+  }
+  modal.classList.add('open');
+}
+
+function finishSkirmish(victory, nextButton) {
+  const run = battleConfig.run;
+  const round = battleConfig.enduranceRound;
+  const title = document.getElementById('result-title');
+  const description = document.getElementById('result-desc');
+  const record = document.getElementById('result-win-record');
+  document.getElementById('result-stars').textContent = '';
+  nextButton.style.display = victory ? 'inline-flex' : 'none';
+
+  const survivors = units.filter((unit) => unit.team === 'blue' && !unit.isHero && unit.hp > 0).length;
+  const reserves = battleConfig.reserveTroops;
+  const remaining = survivors + reserves;
+  if (victory) {
+    const recovered = Math.min(run.capacity - remaining, Math.ceil(run.capacity * 0.1));
+    const supply = randomChoice(ENDURANCE_SUPPLIES);
+    const stock = skirmishSupplies();
+    stock[supply.id] = (stock[supply.id] ?? 0) + 1;
+    run.troops = remaining + recovered;
+    run.rounds.push({ survivors, reserves, recovered, supply: supply.id, troops: run.troops });
+    if (round) {
+      saveData.enduranceBest = bestEnduranceWins();
+    } else {
+      run.streak = (run.streak ?? 0) + 1;
+      saveData.skirmishBest = Math.max(saveData.skirmishBest ?? 0, run.streak);
+    }
+    title.textContent = round ? `🎉 無盡挑戰第 ${round} 波過關` : '🎉 自由遭遇戰勝利';
+    description.textContent = `出戰存活 ${survivors} 人，留守 ${reserves} 人，補充 ${recovered} 人。獲得${supply.name}。下次可出戰 ${run.troops} 人。`;
+    nextButton.textContent = round ? '➡️ 整備下一波' : '➡️ 整備下一場';
+  } else if (round) {
+    run.finished = true;
+    title.textContent = '💫 無盡挑戰結束';
+    description.textContent = '返回大廳可開始新一輪。';
+  } else {
+    run.troops = remaining || run.capacity;
+    title.textContent = '💫 自由遭遇戰戰敗';
+    description.textContent = remaining
+      ? `出戰存活 ${survivors} 人，留守 ${reserves} 人，下場可出戰 ${run.troops} 人。`
+      : '軍團全滅。返回大廳後可用新軍團重新出戰。';
+  }
+  const wins = round ? run.rounds.length : (run.streak ?? 0);
+  const unit = round ? '波' : '場';
+  const best = round ? bestEnduranceWins() : (saveData.skirmishBest ?? 0);
+  record.textContent = `${victory ? '目前連勝' : '敗北前連勝'}：${wins} ${unit} ｜ 歷史最高連勝：${best} ${unit}`;
+  record.hidden = false;
+  if (!victory) {
+    const defeat = { wins };
+    if (round) saveData.enduranceLastDefeat = defeat;
+    else {
+      saveData.skirmishLastDefeat = defeat;
+      run.streak = 0;
+    }
+  }
+  writeSave();
+}
+
+function drawBattle() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(camera.x, camera.y);
+  ctx.scale(camera.zoom, camera.zoom);
+
+  const mapKey = battleConfig && battleConfig.map === 'crystal' ? 'map_crystal' : 'map_cloud';
+  const bgImg = LOADED_IMAGES[mapKey];
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, WORLD_W, WORLD_H);
+  } else {
+    const grad = ctx.createLinearGradient(0, 0, WORLD_W, WORLD_H);
+    if (mapKey === 'map_cloud') { grad.addColorStop(0, '#fbcfe8'); grad.addColorStop(0.5, '#c4b5fd'); grad.addColorStop(1, '#93c5fd'); }
+    else { grad.addColorStop(0, '#1e1b4b'); grad.addColorStop(0.5, '#065f46'); grad.addColorStop(1, '#312e81'); }
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+  }
+
+  const alive = units.filter((u) => u.hp > 0).sort((a, b) => a.y - b.y);
+  for (let i = 0; i < alive.length; i++) {
+    const u = alive[i];
+    const size = u.isHero ? 58 : 22;
+    ctx.fillStyle = u.team === 'blue' ? 'rgba(56, 189, 248, 0.45)' : 'rgba(251, 113, 133, 0.45)';
+    ctx.beginPath(); ctx.ellipse(u.x, u.y + size * 0.34, size * 0.36, size * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+
+    const sheet = LOADED_IMAGES[u.sheetKey];
+    ctx.save();
+    ctx.translate(u.x, u.y);
+    if (u.facing < 0) ctx.scale(-1, 1);
+    if (sheet) {
+      const cols = 4, rows = u.isHero ? 4 : 2;
+      const rowIdx = u.isHero ? (u.state === 'skill' ? 3 : u.state === 'attack' ? 2 : u.state === 'move' ? 1 : 0) : (u.state === 'attack' ? 1 : 0);
+      const frameIdx = Math.floor(u.animTime * 8) % cols;
+      const fw = sheet.width / cols, fh = sheet.height / rows;
+      ctx.drawImage(sheet, frameIdx * fw, rowIdx * fh, fw, fh, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = u.isHero ? HEROES[u.heroId].color : u.color;
+      ctx.beginPath(); ctx.arc(0, 0, size * 0.36, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    if (u.isHero) {
+      const bw = 54;
+      ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(u.x - bw / 2, u.y - size * 0.58, bw, 5);
+      ctx.fillStyle = u.team === 'blue' ? '#38bdf8' : '#fb7185';
+      ctx.fillRect(u.x - bw / 2, u.y - size * 0.58, bw * Math.max(0, u.hp / u.maxHp), 5);
+    }
+  }
+
+  projectiles.forEach((pr) => { ctx.fillStyle = pr.color; ctx.beginPath(); ctx.arc(pr.x, pr.y, 3.8, 0, Math.PI * 2); ctx.fill(); });
+  effects.forEach((ef) => { ctx.strokeStyle = ef.color; ctx.globalAlpha = Math.max(0, ef.life); ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; });
+  ctx.restore();
+}
+
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach((screen) => screen.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'lobby-screen' && lobbyMusicEnabled) playLobbyMusic();
+  else lobbyMusic.pause();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight - 54; }
+function fitCamera() {
+  setCameraZoom(Math.min(canvas.width / WORLD_W, canvas.height / WORLD_H));
+}
+function setCameraZoom(zoom) {
+  camera.zoom = zoom;
+  camera.x = (canvas.width - WORLD_W * camera.zoom) / 2;
+  camera.y = (canvas.height - WORLD_H * camera.zoom) / 2;
+}
+window.addEventListener('resize', () => { resizeCanvas(); fitCamera(); });
+canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
+  setCameraZoom(Math.max(0.55, Math.min(2.4, camera.zoom * (event.deltaY < 0 ? 1.1 : 0.9))));
+}, { passive: false });
+window.addEventListener('keydown', (e) => { if (!battleActive) return; if (e.key === 'q' || e.key === 'Q') triggerHeroSkill('blue', 1); if (e.key === 'w' || e.key === 'W') triggerHeroSkill('blue', 2); });
+
+document.getElementById('tab-campaign').onclick = () => { currentMode = 'campaign'; document.getElementById('tab-campaign').classList.add('active'); document.getElementById('tab-skirmish').classList.remove('active'); document.getElementById('campaign-panel').style.display = 'block'; document.getElementById('skirmish-panel').style.display = 'none'; renderLobbyUI(); };
+document.getElementById('tab-skirmish').onclick = () => {
+  if (!saveData.campaignCleared) { alert('🔒 請先通關全部 6 關戰役，即可解鎖自由遭遇戰！'); return; }
+  currentMode = 'skirmish'; document.getElementById('tab-skirmish').classList.add('active'); document.getElementById('tab-campaign').classList.remove('active'); document.getElementById('campaign-panel').style.display = 'none'; document.getElementById('skirmish-panel').style.display = 'block'; renderLobbyUI();
+};
+document.getElementById('skirmish-count').oninput = (event) => {
+  const count = event.currentTarget;
+  const run = document.getElementById('skirmish-endurance').checked ? saveData.enduranceRun : saveData.skirmishRun;
+  const continuing = run && !run.finished;
+  document.getElementById('skirmish-count-lbl').textContent = continuing ? `${count.value} / ${count.max}` : count.value;
+};
+document.getElementById('skirmish-supply').onchange = renderEnduranceStatus;
+document.getElementById('skirmish-enemy-hero').onchange = renderLobbyUI;
+document.getElementById('skirmish-diff').onchange = renderLobbyUI;
+document.getElementById('skirmish-endurance').onchange = renderLobbyUI;
+document.getElementById('btn-start-battle').onclick = startBattle;
+document.getElementById('btn-retreat').onclick = () => {
+  battleActive = false;
+  stopBattleMusic();
+  switchScreen('lobby-screen');
+  renderLobbyUI();
+};
+document.getElementById('btn-pause').onclick = (event) => {
+  if (!battleActive) return;
+  battlePaused = !battlePaused;
+  event.currentTarget.textContent = battlePaused ? '▶️ 繼續' : '⏸️ 暫停';
+  if (battlePaused) battleMusic.pause();
+  else playBattleMusic();
+};
+document.getElementById('btn-skill-1').onclick = () => triggerHeroSkill('blue', 1);
+document.getElementById('btn-skill-2').onclick = () => triggerHeroSkill('blue', 2);
+document.getElementById('btn-rules').onclick = () => document.getElementById('modal-rules').classList.add('open');
+document.getElementById('btn-save-mgr').onclick = () => { document.getElementById('save-code-box').value = btoa(encodeURIComponent(JSON.stringify(saveData))); document.getElementById('modal-save').classList.add('open'); };
+document.getElementById('btn-copy-save').onclick = () => { const b = document.getElementById('save-code-box'); b.select(); navigator.clipboard?.writeText(b.value); alert('✅ 存檔代碼已複製！'); };
+document.getElementById('btn-import-save').onclick = () => {
+  try {
+    const imported = JSON.parse(decodeURIComponent(atob(document.getElementById('save-code-box').value.trim())));
+    saveData = { ...newSave(null), ...imported };
+    battleActive = false;
+    stopBattleMusic();
+    closeModal('modal-result');
+    switchScreen('lobby-screen');
+    if (!saveData.campaignCleared) document.getElementById('tab-campaign').click();
+    writeSave();
+    populateUnitSelects();
+    renderLobbyUI();
+    alert('✅ 存檔已成功還原！');
+  } catch (error) {
+    alert('❌ 存檔代碼格式錯誤');
+  }
+};
+document.getElementById('btn-reset-save').onclick = () => {
+  if (!confirm('確定要清除進度與道具庫存，重新開始並領取三件起始道具嗎？')) return;
+  saveData = newSave();
+  battleActive = false;
+  stopBattleMusic();
+  closeModal('modal-result');
+  switchScreen('lobby-screen');
+  selectedStageId = 1;
+  document.getElementById('skirmish-endurance').checked = false;
+  document.getElementById('skirmish-supply').value = '';
+  writeSave();
+  populateUnitSelects();
+  document.getElementById('tab-campaign').click();
+  closeModal('modal-save');
+};
+document.getElementById('btn-result-lobby').onclick = () => { closeModal('modal-result'); switchScreen('lobby-screen'); renderLobbyUI(); };
+document.getElementById('btn-result-next').onclick = () => {
+  closeModal('modal-result');
+  if (battleConfig.mode === 'skirmish') {
+    switchScreen('lobby-screen');
+    renderLobbyUI();
+    return;
+  }
+  selectedStageId = Math.min(6, selectedStageId + 1);
+  renderLobbyUI();
+  startBattle();
+};
+
+let lastTs = performance.now();
+function gameLoop(ts) {
+  const dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
+  updateBattle(dt);
+  if (document.getElementById('battle-screen').classList.contains('active')) drawBattle();
+  requestAnimationFrame(gameLoop);
+}
+window.addEventListener('DOMContentLoaded', () => { loadSave(); document.getElementById('skirmish-endurance').checked = Boolean(saveData.enduranceRun && !saveData.enduranceRun.finished); populateUnitSelects(); renderLobbyUI(); preloadAllAssets(); requestAnimationFrame(gameLoop); playLobbyMusic(); });
+</script>
+</body>
+</html>
